@@ -2,14 +2,15 @@
 #include <stdio.h>
 #include "y.tab.h"
 
-extern void yyerror(const char*);
+void yyerror(const char*);
 int yywrap();
+int lineno = 1; 
 %}
 
 number	[0-9]
 letter 	[a-zA-Z]
 identifier	[a-zA-Z_]([a-zA-Z_0-9])*
-whitespace	[ \t\n]
+whitespace	[ \t]
 
 %%
 
@@ -18,8 +19,7 @@ whitespace	[ \t\n]
 "break"		{ return BREAK; }
 "continue"	{ return CONTINUE; }
 "else"		{ return ELSE; }
-^"int"{whitespace} { printf("int\n");return INT; } ////////////
-{whitespace}"int"{whitespace}		{ printf("int\n");return INT; }
+"int" 		{ return INT; }
 "if"		{ return IF; }
 "main"		{ return MAIN; }
 "return"	{ return RETURN; }
@@ -34,30 +34,31 @@ whitespace	[ \t\n]
 "!="	{ return OP_NE; }
 
 "!"	{ return '!'; }
-"-"	{ return '-'; }//-a
+"-"	{ return '-'; }
 "+"	{ return '+'; }
-"-"	{ return '-'; }//a-b
 "*"	{ return '*'; }
 "/"	{ return '/'; }
 "%"	{ return '%'; }
 "<"	{ return '<'; }
 ">"	{ return '>'; }
+"="	{ return '='; }
+
 "{"	{ return '{'; }
 "}"	{ return '}'; }
 "["	{ return '['; }
 "]"	{ return ']'; }
 "("	{ return '('; }
 ")"	{ return ')'; }
-"="	{ return '='; }
 ";"	{ return ';'; }
 "," { return ','; }
 
-
 {whitespace}+ 	;//whitespace
+"\n"	{ lineno++; }
 
-.	{ yyerror("unknown symbol."); } //??? line number, symbol text
-
-
+.	{ 	char msg[100];
+		sprintf(msg,"unknown symbol '%c'.",*yytext);
+		yyerror(msg); 
+	}
 %%
 
 int yywrap()
