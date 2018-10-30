@@ -1,8 +1,18 @@
 #include <stdio.h>
 #include "y.tab.h"
 #include <stdlib.h>
+//#include "typedefine.h"
 
 extern FILE*yyin;
+extern FILE*yyout;
+/*extern TreeNode* node;
+
+void init(){
+	for(int i=0;i<MAXTREENODE;i++){
+		node[i].childcnt = 0;
+		node[i].sibling = NULL;
+	}
+}*/
 
 int main(int argc, char *argv[])
 {
@@ -11,11 +21,12 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	FILE* fp1 = fopen(argv[1],"r");
-	//freopen(argv[1],"r",stdin);
-	//freopen(argv[2],'w',stdout);
 	
 	yyin = fp1;
+	//yyout = stdout;
 	
+	//init();
+
 	yyparse();
 	return 0;
 }

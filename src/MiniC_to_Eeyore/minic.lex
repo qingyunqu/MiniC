@@ -1,9 +1,13 @@
 %{
 #include <stdio.h>
 #include "y.tab.h"
+//#include "typedefine.h"
 
 void yyerror(const char*);
 int yywrap();
+//extern TreeNode* node;
+//extern int nodecnt;
+
 int lineno = 1; 
 %}
 
@@ -16,8 +20,8 @@ whitespace	[ \t]
 
 "//".*		;//single line comment
 
-"break"		{ return BREAK; }
-"continue"	{ return CONTINUE; }
+"break"		{ return BREAK; } // wait to realize
+"continue"	{ return CONTINUE; } // wait to realize
 "else"		{ return ELSE; }
 "int" 		{ return INT; }
 "if"		{ return IF; }
@@ -42,17 +46,17 @@ whitespace	[ \t]
 "<"	{ return '<'; }
 ">"	{ return '>'; }
 "="	{ return '='; }
+"["	{ return '['; }
+"]"	{ return ']'; }
 
 "{"	{ return '{'; }
 "}"	{ return '}'; }
-"["	{ return '['; }
-"]"	{ return ']'; }
 "("	{ return '('; }
 ")"	{ return ')'; }
 ";"	{ return ';'; }
 "," { return ','; }
 
-{whitespace}+ 	;//whitespace
+{whitespace}+ 	;
 "\n"	{ lineno++; }
 
 .	{ 	char msg[100];
