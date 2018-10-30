@@ -38,7 +38,7 @@ typedef enum StmtKind {
 	assign2,
 	vardefn_,
 	return_,
-	funccall_,
+	funccall_, //
 } StmtKind;
 typedef enum ExpKind {
 	add,
@@ -55,9 +55,9 @@ typedef enum ExpKind {
 	op_index,
 	integer,
 	identifier,
-	op_judge,
-	op_neg,
-	bracket,
+	op_judge,  //
+	op_neg,    //
+	bracket,   //
 	funccall,
 } ExpKind;
 typedef struct TokenType {

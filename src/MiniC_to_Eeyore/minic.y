@@ -198,10 +198,10 @@ statement:  //extend
 				node[nodecnt].kind.stmt = vardefn_;
 				$$ = &node[nodecnt++];
 				insert($$,$1);}
-	| return {	node[nodecnt].nodekind = STMT;
+	| RETURN expression ';'  {	node[nodecnt].nodekind = STMT;
 				node[nodecnt].kind.stmt = return_;
 				$$ = &node[nodecnt++];
-				insert($$,$1);}
+				insert($$,$2);}
 	| funcdecl  // against to BNF?
 	| funccall {	node[nodecnt].nodekind = STMT;
 					node[nodecnt].kind.stmt  = funccall_;
@@ -272,7 +272,7 @@ expression:   //??? previlege  //??child count
 									insert($$,$1);
 									insert($$,$3); }
 //	| expression '[' expression ']'   // what's this?
-	| identifier '[' expression ']' {	node[nodecnt].nodekind = EXP;
+	| expression '[' expression ']' {	node[nodecnt].nodekind = EXP;
 										node[nodecnt].kind.exp =  op_index;
 										$$ = &node[nodecnt++];
 										insert($$,$1);
@@ -318,11 +318,6 @@ callparam:
 					$$ = &node[nodecnt++];
 					insert($$,$1); }
 	| callparam ',' expression { insert($$,$3); } //maybe error?
-	;
-return:
-	RETURN expression ';' { node[nodecnt].nodekind = RETURN_;
-							$$ = &node[nodecnt++];
-							insert($$,$2); }
 	;
 type:    //can be extended
 	  INT { ;}
@@ -413,17 +408,125 @@ void yyout_exp(SymType type,int ret){
 		case var_type:
 			fprintf(yyout,"t%d",ret);
 			break;
+		case func_global:
+			fprintf(yyout,"call f_");
+			break;
 		default:
 			break;
 	}
 }
 SymType rettype;
 int dfs_exp(TreeNode*p){
-	int t,ret1,ret2;
-	SymType type1,type2;
+	int t,ret,ret1,ret2;
+	SymType type,type1,type2;
 	SymTab *tab = NULL;
 	char symname[SYMNAMELEN];
 	switch(p->kind.exp){
+		case op_index:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt-1;
+			ret1 = dfs_exp(p->child[0]);  //expression [ expression ] ?
+			type1 = rettype;
+			ret2 = dfs_exp(p->child[1]);
+			type2 = rettype;
+			fprintf(yyout,"t%d = ",t);
+			yyout_exp(type1,ret1);
+			fprintf(yyout,"[");
+			yyout_exp(type2,ret2);
+			fprintf(yyout,"]\n");
+			rettype = var_type;
+			return t;
+			break;
+		case op_and:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt-1;
+			ret1 = dfs_exp(p->child[0]);
+			type1 = rettype;
+			ret2 = dfs_exp(p->child[1]);
+			type2 = rettype;
+			fprintf(yyout,"t%d = ",t);
+			yyout_exp(type1,ret1);
+			fprintf(yyout,"&&");
+			yyout_exp(type2,ret2);
+			fprintf(yyout,"\n");
+			rettype = var_type;
+			return t;
+			break;
+		case op_or:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt-1;
+			ret1 = dfs_exp(p->child[0]);
+			type1 = rettype;
+			ret2 = dfs_exp(p->child[1]);
+			type2 = rettype;
+			fprintf(yyout,"t%d = ",t);
+			yyout_exp(type1,ret1);
+			fprintf(yyout,"||");
+			yyout_exp(type2,ret2);
+			fprintf(yyout,"\n");
+			rettype = var_type;
+			return t;
+			break;
+		case op_less:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt-1;
+			ret1 = dfs_exp(p->child[0]);
+			type1 = rettype;
+			ret2 = dfs_exp(p->child[1]);
+			type2 = rettype;
+			fprintf(yyout,"t%d = ",t);
+			yyout_exp(type1,ret1);
+			fprintf(yyout," < ");
+			yyout_exp(type2,ret2);
+			fprintf(yyout,"\n");
+			rettype = var_type;
+			return t;
+			break;
+		case op_greater:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt-1;
+			ret1 = dfs_exp(p->child[0]);
+			type1 = rettype;
+			ret2 = dfs_exp(p->child[1]);
+			type2 = rettype;
+			fprintf(yyout,"t%d = ",t);
+			yyout_exp(type1,ret1);
+			fprintf(yyout," > ");
+			yyout_exp(type2,ret2);
+			fprintf(yyout,"\n");
+			rettype = var_type;
+			return t;
+			break;
+		case op_eq:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt-1;
+			ret1 = dfs_exp(p->child[0]);
+			type1 = rettype;
+			ret2 = dfs_exp(p->child[1]);
+			type2 = rettype;
+			fprintf(yyout,"t%d = ",t);
+			yyout_exp(type1,ret1);
+			fprintf(yyout,"==");
+			yyout_exp(type2,ret2);
+			fprintf(yyout,"\n");
+			rettype = var_type;
+			return t;
+			break;
+		case op_ne:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt-1;
+			ret1 = dfs_exp(p->child[0]);
+			type1 = rettype;
+			ret2 = dfs_exp(p->child[1]);
+			type2 = rettype;
+			fprintf(yyout,"t%d = ",t);
+			yyout_exp(type1,ret1);
+			fprintf(yyout,"!=");
+			yyout_exp(type2,ret2);
+			fprintf(yyout,"\n");
+			rettype = var_type;
+			return t;
+			break;
 		case add:
 			fprintf(yyout,"var t%d\n",tcnt++);
 			t = tcnt-1;
@@ -484,6 +587,21 @@ int dfs_exp(TreeNode*p){
 			rettype = var_type;
 			return t;
 			break;
+		case mod:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt-1;
+			ret1 = dfs_exp(p->child[0]);
+			type1 = rettype;
+			ret2 = dfs_exp(p->child[1]);
+			type2 = rettype;
+			fprintf(yyout,"t%d = ",t);
+			yyout_exp(type1,ret1);
+			fprintf(yyout,"%");
+			yyout_exp(type2,ret2);
+			fprintf(yyout,"\n");
+			rettype = var_type;
+			return t;
+			break;
 		case integer:
 			rettype = int_type;
 			return p->attr.val;
@@ -497,12 +615,30 @@ int dfs_exp(TreeNode*p){
 					yyerror("Undeclared symbol.");
 				}
 			}
-			//yyout_exp(tab->type,tab->num);
 			rettype = tab->type;
 			return tab->num;
 			break;
 		case funccall:
-			
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt-1;
+			for(int i=0;i<p->child[1]->childcnt;i++){
+				ret = dfs_exp(p->child[1]->child[i]);
+				type = rettype;
+				fprintf(yyout,"param ");
+				yyout_exp(type,ret);
+				fprintf(yyout,"\n");
+			}
+			fprintf(yyout,"t%d = ",t);
+			yyout_exp(func_global,-1);
+			fprintf(yyout,"%s\n",p->child[0]->attr.name);
+			rettype = var_type;
+			return t;
+			break;
+		case op_judge:
+		case op_neg:
+		case bracket:
+			fprintf(yyout,"Unsupported expression.\n");
+		default:
 			break;
 	}
 }
@@ -510,26 +646,50 @@ int dfs_stmt(TreeNode*p){
 	SymTab *tab = NULL;
 	char symname[SYMNAMELEN];
 	int ret,ret1,ret2;
-	SymType type1,type2;
+	SymType type,type1,type2;
 	switch(p->kind.stmt){
 		case kong:
 			return 0;
 			break;
 		case statements_:
-			//dfs(p->child[0]);
+			dfs(p->child[0]);
 			break;
 		case if_:
-			//dfs_exp(p->child[0]);
-			//dfs_stmt(p->child[1]);
+			ret = dfs_exp(p->child[0]);
+			type = rettype;
+			fprintf(yyout,"if ");
+			yyout_exp(type,ret);
+			fprintf(yyout," == 0 goto l%d\n",lcnt++);
+			int lcnt_if_end = lcnt-1;
+			dfs_stmt(p->child[1]);
+			fprintf(yyout,"l%d:\n",lcnt_if_end);
 			break;
 		case if_else:
-			//dfs_exp(p->child[0]);
-			//dfs_stmt(p->child[1]);
-			//dfs_stmt(p->child[2]);
+			ret = dfs_exp(p->child[0]);
+			type = rettype;
+			fprintf(yyout,"if ");
+			yyout_exp(type,ret);
+			fprintf(yyout," == 0 goto l%d\n",lcnt++);
+			int lcnt_if_else_header = lcnt - 1;
+			dfs_stmt(p->child[1]);
+			fprintf(yyout,"goto l%d\n",lcnt++);
+			int lcnt_if_else_end = lcnt - 1;
+			fprintf(yyout,"l%d:\n",lcnt_if_else_header);
+			dfs_stmt(p->child[2]);
+			fprintf(yyout,"l%d:\n",lcnt_if_else_end);
 			break;
 		case while_:
-			//dfs_exp(p->child[0]);
-			//dfs_stmt(p->child[1]);
+			fprintf(yyout,"l%d:\n",lcnt++);
+			int lcnt_while_head = lcnt-1;
+			ret = dfs_exp(p->child[0]);
+			type = rettype;
+			fprintf(yyout,"if ");
+			yyout_exp(type,ret);
+			fprintf(yyout," == 0 goto l%d\n",lcnt++);
+			int lcnt_while_end = lcnt-1;
+			dfs_stmt(p->child[1]);
+			fprintf(yyout,"goto l%d\n",lcnt_while_head);
+			fprintf(yyout,"l%d:\n",lcnt_while_end);
 			break;
 		case assign1:
 			//dprintf("assign1\n");
@@ -548,7 +708,7 @@ int dfs_stmt(TreeNode*p){
 			fprintf(yyout,"\n");
 			break;
 		case assign2:
-			dprintf("assign2\n");
+			//dprintf("assign2\n");
 			sprintf(symname,"%s-%s",dfs_state,p->child[0]->attr.name);
 			tab = look_symtab(symname);
 			if(tab == NULL){
@@ -568,10 +728,18 @@ int dfs_stmt(TreeNode*p){
 			fprintf(yyout,"\n");
 			yyout_exp(tab->type,tab->num);
 			fprintf(yyout,"[");
-			fprintf(yyout," t%d ",tcnt++);
+			fprintf(yyout,"t%d",tcnt++);
 			fprintf(yyout,"]");
 			fprintf(yyout," = ");
 			yyout_exp(type2,ret2);
+			fprintf(yyout,"\n");
+			break;
+		case return_:
+			dprintf("return_\n");
+			ret = dfs_exp(p->child[0]);
+			type = rettype;
+			fprintf(yyout,"return ");
+			yyout_exp(type,ret);
 			fprintf(yyout,"\n");
 			break;
 		case vardefn_:
@@ -590,11 +758,7 @@ int dfs_stmt(TreeNode*p){
 				yyerror("vardefn_ child count");
 			}
 			break;
-		case return_:
-		
-			break;
-		case funccall_:
-			
+		case funccall_: // ignore this now
 			break;
 		default:
 			break;
@@ -661,7 +825,7 @@ int dfs(TreeNode*p){
 			set_state("global");
 			break;
 		case MAINFUNC:
-			dprintf("MAINFUNC\n");
+			//dprintf("MAINFUNC\n");
 			fprintf(yyout,"f_main [0]\n");
 			insert_symtab("main",func_global,0);
 			set_state("main");
@@ -711,7 +875,7 @@ void gen_eeyore(){
 	symcnt = 0;
 	set_state("global");
 	dfs(root);
-	print_symtab();
+	//print_symtab();
 	dprintf("node count: %d\n",nodecnt);
 }
 void yyerror(const char *msg){

@@ -7,6 +7,7 @@ a = 0;
 int b;
 b = 0;
 int f(int x){
+	a = f(a) + f(b);
 	if(x < 2)
 		return 1;
 	else{
@@ -32,9 +33,9 @@ int main(){
 	n = getint();
 	if (n < 0 || n > 30)
 		return 1; 
-	putint(f(n));
-	putchar(10);
-	putint(g(n));
-	putchar(10);
+	n = putint(f(n));
+	n = putchar(10);
+	n = putint(g(n));
+	n = putchar(10);
 	return 0;
 }
