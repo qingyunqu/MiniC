@@ -7,6 +7,7 @@ extern int lineno;
 extern FILE*yyout;
 void yyerror(const char*);
 int yylex(void);
+void gen_eeyore();
 
 int nodecnt = 0;
 %}
@@ -14,6 +15,7 @@ int nodecnt = 0;
 #include "typedefine.h"
 TreeNode* root;
 TreeNode node[MAXTREENODE];
+void insert(TreeNode*f,TreeNode*c);
 }
 %union{
 	int		int_value;
@@ -27,9 +29,13 @@ TreeNode node[MAXTREENODE];
 %token BREAK CONTINUE ELSE IF WHILE
 %token RETURN
 %token OP_AND OP_OR OP_EQ OP_NE
-%type <node_value> integer identifier expression callparam return funccall goal mainfunc defn vardefn funcdecl assignment funcdefn paramdecl vardecl funccontext statements statement
+%type <node_value> integer identifier expression callparam funccall goal mainfunc defn vardefn funcdecl assignment funcdefn paramdecl vardecl funccontext statements statement
+%left OP_AND OP_OR
+%left OP_EQ OP_NE
+%left '<' '>'
 %left '+' '-'
-%left '*' '/' '%'  //extend??
+%left '*' '/' '%'
+//%right
 %start goal
 
 %%
@@ -357,7 +363,7 @@ typedef struct SymTab{
 SymTab symtab[1000];
 char dfs_state[20];
 void set_state(char* s){
-	sprintf(dfs_state,"%s\0",s);
+	sprintf(dfs_state,"%s",s);
 }
 int Tcnt,tcnt,lcnt,symcnt;
 void insert_symtab(char* identifier,SymType type,int num){
@@ -366,19 +372,19 @@ void insert_symtab(char* identifier,SymType type,int num){
 	sprintf(symtab[symcnt++].name,"%s",identifier);
 }
 void print_symtab(){
-	printf("\n");
+	//fprintf(stderr,"\n");
 	for(int i=0;i<symcnt;i++){
 		if(symtab[i].type == var_global){
-			printf("%s var_global T%d\n",symtab[i].name,symtab[i].num);
+			fprintf(stderr,"%s var_global T%d\n",symtab[i].name,symtab[i].num);
 		}
 		if(symtab[i].type == func_global){
-			printf("%s func_global param%d\n",symtab[i].name,symtab[i].num);
+			fprintf(stderr,"%s func_global param%d\n",symtab[i].name,symtab[i].num);
 		}
 		if(symtab[i].type == param_decl){
-			printf("%s func_param p%d\n",symtab[i].name,symtab[i].num);
+			fprintf(stderr,"%s func_param p%d\n",symtab[i].name,symtab[i].num);
 		}
 		if(symtab[i].type == var_local){
-			printf("%s var_local T%d\n",symtab[i].name,symtab[i].num);
+			fprintf(stderr,"%s var_local T%d\n",symtab[i].name,symtab[i].num);
 		}
 	}
 }
@@ -415,24 +421,31 @@ void yyout_exp(SymType type,int ret){
 			break;
 	}
 }
+void dfs(TreeNode*p);
 SymType rettype;
 int dfs_exp(TreeNode*p){
-	int t,ret,ret1,ret2;
+	int t,tt,ret,ret1,ret2;
 	SymType type,type1,type2;
 	SymTab *tab = NULL;
 	char symname[SYMNAMELEN];
 	switch(p->kind.exp){
 		case op_index:
 			fprintf(yyout,"var t%d\n",tcnt++);
-			t = tcnt-1;
+			t = tcnt - 1;
+			fprintf(yyout,"var t%d\n",tcnt++);
+			tt = tcnt - 1;
 			ret1 = dfs_exp(p->child[0]);  //expression [ expression ] ?
 			type1 = rettype;
 			ret2 = dfs_exp(p->child[1]);
 			type2 = rettype;
+			fprintf(yyout,"t%d = 4 * ",tt);
+			yyout_exp(type2,ret2);
+			fprintf(yyout,"\n");
 			fprintf(yyout,"t%d = ",t);
 			yyout_exp(type1,ret1);
 			fprintf(yyout,"[");
-			yyout_exp(type2,ret2);
+			//yyout_exp(type2,ret2);
+			fprintf(yyout,"t%d",tt);
 			fprintf(yyout,"]\n");
 			rettype = var_type;
 			return t;
@@ -461,7 +474,7 @@ int dfs_exp(TreeNode*p){
 			type2 = rettype;
 			fprintf(yyout,"t%d = ",t);
 			yyout_exp(type1,ret1);
-			fprintf(yyout,"||");
+			fprintf(yyout," || ");
 			yyout_exp(type2,ret2);
 			fprintf(yyout,"\n");
 			rettype = var_type;
@@ -506,7 +519,7 @@ int dfs_exp(TreeNode*p){
 			type2 = rettype;
 			fprintf(yyout,"t%d = ",t);
 			yyout_exp(type1,ret1);
-			fprintf(yyout,"==");
+			fprintf(yyout," == ");
 			yyout_exp(type2,ret2);
 			fprintf(yyout,"\n");
 			rettype = var_type;
@@ -521,7 +534,7 @@ int dfs_exp(TreeNode*p){
 			type2 = rettype;
 			fprintf(yyout,"t%d = ",t);
 			yyout_exp(type1,ret1);
-			fprintf(yyout,"!=");
+			fprintf(yyout," != ");
 			yyout_exp(type2,ret2);
 			fprintf(yyout,"\n");
 			rettype = var_type;
@@ -536,7 +549,7 @@ int dfs_exp(TreeNode*p){
 			type2 = rettype;
 			fprintf(yyout,"t%d = ",t);
 			yyout_exp(type1,ret1);
-			fprintf(yyout,"+");
+			fprintf(yyout," + ");
 			yyout_exp(type2,ret2);
 			fprintf(yyout,"\n");
 			rettype = var_type;
@@ -551,7 +564,7 @@ int dfs_exp(TreeNode*p){
 			type2 = rettype;
 			fprintf(yyout,"t%d = ",t);
 			yyout_exp(type1,ret1);
-			fprintf(yyout,"-");
+			fprintf(yyout," - ");
 			yyout_exp(type2,ret2);
 			fprintf(yyout,"\n");
 			rettype = var_type;
@@ -581,7 +594,7 @@ int dfs_exp(TreeNode*p){
 			type2 = rettype;
 			fprintf(yyout,"t%d = ",t);
 			yyout_exp(type1,ret1);
-			fprintf(yyout,"/");
+			fprintf(yyout," / ");
 			yyout_exp(type2,ret2);
 			fprintf(yyout,"\n");
 			rettype = var_type;
@@ -596,7 +609,7 @@ int dfs_exp(TreeNode*p){
 			type2 = rettype;
 			fprintf(yyout,"t%d = ",t);
 			yyout_exp(type1,ret1);
-			fprintf(yyout,"%");
+			fprintf(yyout," %% ");
 			yyout_exp(type2,ret2);
 			fprintf(yyout,"\n");
 			rettype = var_type;
@@ -635,9 +648,33 @@ int dfs_exp(TreeNode*p){
 			return t;
 			break;
 		case op_judge:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt - 1;
+			ret = dfs_exp(p->child[0]);
+			type = rettype;
+			fprintf(yyout,"t%d = ! ",t);
+			yyout_exp(type,ret);
+			fprintf(yyout,"\n");
+			rettype = var_type;
+			return t;
+			break;
 		case op_neg:
+			fprintf(yyout,"var t%d\n",tcnt++);
+			t = tcnt - 1;
+			ret = dfs_exp(p->child[0]);
+			type = rettype;
+			fprintf(yyout,"t%d = - ",t);
+			yyout_exp(type,ret);
+			fprintf(yyout,"\n");
+			rettype = var_type;
+			return t;
+			break;
 		case bracket:
-			fprintf(yyout,"Unsupported expression.\n");
+			ret = dfs_exp(p->child[0]);
+			type = rettype;
+			rettype = type;
+			return ret;
+			break;
 		default:
 			break;
 	}
@@ -723,7 +760,7 @@ int dfs_stmt(TreeNode*p){
 			type2 = rettype;
 
 			fprintf(yyout,"var t%d\n",tcnt);
-			fprintf(yyout,"t%d = 4*",tcnt);
+			fprintf(yyout,"t%d = 4 * ",tcnt);
 			yyout_exp(type1,ret1);
 			fprintf(yyout,"\n");
 			yyout_exp(tab->type,tab->num);
@@ -764,7 +801,7 @@ int dfs_stmt(TreeNode*p){
 			break;
 	}
 }
-int dfs(TreeNode*p){
+void dfs(TreeNode*p){
 	switch(p->nodekind){
 		case GOAL:
 			//dprintf("GOAL\n");
@@ -796,7 +833,7 @@ int dfs(TreeNode*p){
 		case FUNCCONTEXT:
 			//dprintf("FUNCCONTEXT\n");
 			if(p->childcnt == 0){
-				return 0;
+				break;
 			}else if(p->childcnt == 1){
 				dfs(p->child[0]);
 			}else{
@@ -854,7 +891,7 @@ int dfs(TreeNode*p){
 				if(p->childcnt == 2){
 					fprintf(yyout,"T%d = %d\n",tab->num,p->child[1]->attr.val);
 				}else if(p->childcnt == 3){
-					fprintf(yyout,"T%d [%d] = %d\n",tab->num,p->child[1]->attr.val,p->child[2]->attr.val);	
+					fprintf(yyout,"T%d [%d] = %d\n",tab->num,p->child[1]->attr.val*4,p->child[2]->attr.val);	
 				}
 			}else{
 				yyerror("ASSIGNMENT tab NULL");
@@ -875,7 +912,7 @@ void gen_eeyore(){
 	symcnt = 0;
 	set_state("global");
 	dfs(root);
-	//print_symtab();
+	print_symtab();
 	dprintf("node count: %d\n",nodecnt);
 }
 void yyerror(const char *msg){

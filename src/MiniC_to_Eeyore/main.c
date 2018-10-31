@@ -16,13 +16,13 @@ void init(){
 
 int main(int argc, char *argv[])
 {
-	if(argc < 2){
+	/*if(argc < 2){
 		printf("Usage: eeyore <input> <output>");
 		exit(1);
-	}
-	FILE* fp1 = fopen(argv[1],"r");
+	}*/
+	//FILE* fp1 = fopen(argv[1],"r");
 	
-	yyin = fp1;
+	//yyin = stdin;
 	//yyout = stdout;
 	
 	//init();
