@@ -1,9 +1,9 @@
-#define __TYPEDEFINE__
-#ifdef __TYPEDEFINE__
+#ifndef __TYPEDEFINE_
+#define __TYPEDEFINE_
 
 //#define __DEBUG__
 #ifdef __DEBUG__
-#define dprintf(format,...)  printf(format,##__VA_ARGS__)
+#define dprintf(format,...)  fprintf(stderr,format,##__VA_ARGS__)
 #else
 #define dprintf(format,...)
 #endif
@@ -68,7 +68,7 @@ typedef struct ExpType {
 } ExpType;
 
 #define MAXCHILDREN 100
-#define MAXTREENODE 2000
+#define MAXTREENODE 2000  
 typedef struct TreeNode {
 	struct TreeNode* child[MAXCHILDREN];
 	int childcnt;

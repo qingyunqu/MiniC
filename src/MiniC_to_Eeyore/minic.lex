@@ -31,7 +31,7 @@ whitespace	[ \t]
 "while"		{ fprintf(stderr,"while");return WHILE; }
 
 {number}+		{ fprintf(stderr,"%s",yytext);sscanf(yytext,"%d",&yylval.int_value); return INT_CONSTANT; } //???judge yytext is a legal digit
-{identifier} 	{ fprintf(stderr,"%s",yytext);yylval.string_value = strdup(yytext); return IDENTIFIER; }//???check type
+{identifier} 	{ fprintf(stderr,"%s",yytext);yylval.string_value = strdup(yytext); return IDENTIFIER; }//???check type  ???free
 
 "&&"	{ fprintf(stderr,"&&");return OP_AND; }
 "||"	{ fprintf(stderr,"||");return OP_OR; }

@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <string.h>
-//#include "typedefine.h"
+#include "typedefine.h"
 
 extern int lineno;
 extern FILE*yyout;
@@ -10,12 +10,12 @@ int yylex(void);
 void gen_eeyore();
 
 int nodecnt = 0;
+TreeNode* root;
+TreeNode node[MAXTREENODE];  //should judge nodecnt < MAXTREENODE
+void insert(TreeNode*f,TreeNode*c);
 %}
 %code requires{
 #include "typedefine.h"
-TreeNode* root;
-TreeNode node[MAXTREENODE];
-void insert(TreeNode*f,TreeNode*c);
 }
 %union{
 	int		int_value;
@@ -177,7 +177,7 @@ statement:  //extend
 										node[nodecnt].kind.stmt = if_;
 										$$ = &node[nodecnt++];
 										insert($$,$3);
-										insert($$,$5);	}
+										insert($$,$5);}
 	| IF '(' expression ')' statement ELSE statement { 	node[nodecnt].nodekind = STMT;
 														node[nodecnt].kind.stmt = if_else;
 														$$ = &node[nodecnt++];	
@@ -912,7 +912,7 @@ void gen_eeyore(){
 	symcnt = 0;
 	set_state("global");
 	dfs(root);
-	print_symtab();
+	//print_symtab();
 	dprintf("node count: %d\n",nodecnt);
 }
 void yyerror(const char *msg){

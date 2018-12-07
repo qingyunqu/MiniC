@@ -1,5 +1,5 @@
 all : eeyore
-eeyore : minic.lex minic.y
+eeyore : minic.lex minic.y main.c
 	lex minic.lex
 	yacc -d minic.y
 	gcc -o eeyore lex.yy.c y.tab.c main.c
