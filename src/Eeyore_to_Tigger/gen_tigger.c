@@ -72,8 +72,8 @@ int spill_a_reg(char *tigger){
 	for(int i=minreg;i<=maxreg;i++){
 		if(registers[i]<0)
 			return i;
-		if((vartab[registers[i]].name[0]=='T' && max<vartab[registers[i]].end){
-			max = vartab[registers[i].end;
+		if((vartab[registers[i]].name[0]=='T' && max<vartab[registers[i]].end)){
+			max = vartab[registers[i]].end;
 			tmp_i = i;
 		}
 		/*if(vartab[registers[i]].status == 1){
