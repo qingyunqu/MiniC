@@ -443,7 +443,7 @@ int dfs_exp(TreeNode*p){
 			fprintf(yyout,"\n");
 			fprintf(yyout,"t%d = ",t);
 			yyout_exp(type1,ret1);
-			fprintf(yyout,"[");
+			fprintf(yyout," [");
 			//yyout_exp(type2,ret2);
 			fprintf(yyout,"t%d",tt);
 			fprintf(yyout,"]\n");
@@ -764,7 +764,7 @@ int dfs_stmt(TreeNode*p){
 			yyout_exp(type1,ret1);
 			fprintf(yyout,"\n");
 			yyout_exp(tab->type,tab->num);
-			fprintf(yyout,"[");
+			fprintf(yyout," [");
 			fprintf(yyout,"t%d",tcnt++);
 			fprintf(yyout,"]");
 			fprintf(yyout," = ");
