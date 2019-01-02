@@ -26,7 +26,7 @@ int is_integer(char *str){
 }
 
 void init_smt(SMT* smt_){
-	smt_->status = 1;
+	//smt_->status = 1;
 
 	char tmp[6][FUNCMAXSIZE];
 	sscanf(smt_->text,"%s",tmp[0]);
@@ -182,8 +182,8 @@ int do_constant_op2(char* num1,char* op2,char* num2)
 void constant_calculation(int b_index,int e_index) // how to optimize negtive number?
 {
 	for(int i=b_index;i<=e_index;i++){  // calculate the answer
-		if(smt[i].status == 0)
-			continue;
+		//if(smt[i].status == 0)
+		//	continue;
 		SMT* smt1 = &smt[i];
 		if(smt1->type==OP2){
 			if(is_integer(smt1->attr[1]) && is_integer(smt1->attr[3])){
@@ -216,11 +216,11 @@ void constant_propagation_block(int b_index,int e_index){ // also copy_propagati
 	if(b_index >= e_index)
 		return;
 	for(int i=b_index;i<e_index;i++){
-		if(smt[i].status==0)
-			continue;
+		//if(smt[i].status==0)
+		//	continue;
 		if(smt[i].type==ASSIGN){// && is_integer(smt[i].attr[1])){
 			for(int j=i+1;j<=e_index;j++){
-				if(smt[j].status==0)
+				if(smt[j].type==NONE)
 					continue;
 				if(is_left(smt[i].attr[0],&smt[j]))
 					break;
@@ -337,13 +337,13 @@ void remove_unused_t(int b_index,int e_index){  // like "var t1", not "var T2" o
 	if(b_index >= e_index)
 		return;
 	for(int i=b_index;i<e_index;i++){
-		if(smt[i].status==0)
-			continue;
+		//if(smt[i].status==0)
+		//	continue;
 		if(smt[i].type==VAR && smt[i].attr[0][0]=='t'){
 			int left_flag = -1;
 			int right_flag = -1;
 			for(int j=i+1;j<=e_index;j++){
-				if(smt[j].status==0)
+				if(smt[j].type==NONE)
 					continue;
 				if(is_right(smt[i].attr[0],&smt[j]))
 					right_flag = j;
@@ -352,19 +352,32 @@ void remove_unused_t(int b_index,int e_index){  // like "var t1", not "var T2" o
 			}
 			//printf("right_flag: %d\nleft_flag: %d\n",right_flag,left_flag);
 			if(right_flag == -1){
-				smt[i].status = 0;
+				smt[i].type = NONE;
 				optimize_status = 1;
 			}
 			if(right_flag<left_flag && left_flag!=-1){
 				for(int j=left_flag;j<=e_index;j++){
-					if(smt[j].status==0)
+					if(smt[j].type==NONE)
 						continue;
 					if(is_left(smt[i].attr[0],&smt[j])){
-						smt[j].status = 0;
+						smt[j].type = NONE;
 						optimize_status = 1;
 					}
 				}
 			}
+		}
+	}
+}
+void reverse_propagation_block(int b_index,int e_index){ // OP or CALL + ASSIGN
+	if(b_index >= e_index)
+		return;
+	for(int i=b_index;i<e_index;i++){
+		if(smt[i].type==NONE)
+			continue;
+		if((smt[i].type==OP2 || smt[i].type==OP1 || smt[i].type==CALL) && smt[i+1].type==ASSIGN && strcmp(smt[i].attr[0],smt[i+1].attr[1])==0){
+			smt[i+1].type=NONE;
+			sprintf(smt[i].attr[0],"%s",smt[i+1].attr[0]);
+			optimize_status = 1;
 		}
 	}
 }
@@ -378,22 +391,26 @@ void do_optimize_block(int b_index,int e_index) // how to optimize through the w
 		if(smt[i].type == IF){
 			constant_propagation_block(block_index,i);
 			remove_unused_t(block_index,i);
+			reverse_propagation_block(block_index,i);
 			block_index = i+1;
 		}
 		if(smt[i].type == GOTO){
 			constant_propagation_block(block_index,i-1);
 			remove_unused_t(block_index,i-1);
+			reverse_propagation_block(block_index,i-1);
 			block_index = i+1;
 		}
 		if(smt[i].type == LABEL){
 			constant_propagation_block(block_index,i-1);
 			remove_unused_t(block_index,i-1);
+			reverse_propagation_block(block_index,i-1);
 			block_index = i+1;
 		}
 	}
 	if(block_index <= e_index){
 		constant_propagation_block(block_index,e_index);
 		remove_unused_t(block_index,e_index);
+		reverse_propagation_block(block_index,e_index);
 	}
 }
 
@@ -403,7 +420,6 @@ void do_optimize(int b_index,int e_index) // the very optimization
 	do_optimize_block(b_index,e_index);
 	// OP or call + ASSIGN
 	// if reduce calculate
-	// remove unreachable
 }
 
 void begin_optimize()
@@ -438,8 +454,8 @@ void optimize()
 void out_optimize_smt()
 {
 	for(int i=0;i<smt_cnt;i++){
-		if(smt[i].status==0)
-			continue;
+		//if(smt[i].status==0)
+		//	continue;
 		SMT* smt1 = &smt[i];
 		switch(smt1->type){
 			case VAR:
@@ -486,6 +502,10 @@ void out_optimize_smt()
 				break;
 			case RETURN:
 				fprintf(optimize_out,"return %s\n",smt1->attr[0]);
+				break;
+			case NONE:
+				break;
+			default:
 				break;
 		}
 	}

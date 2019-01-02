@@ -1,7 +1,7 @@
 #ifndef __TYPEDEFINE_H_
 #define __TYPEDEFINE_H_
 
-#define __DEBUG_
+//#define __DEBUG_
 #ifdef __DEBUG_
 #define dprintf(format,...) fprintf(stderr,format,##__VA_ARGS__)
 #else
@@ -24,13 +24,14 @@ typedef enum SMTTYPE_{
 	LABEL,
 	PARAM,
 	RETURN,
+	NONE, // removed statements
 } SMTTYPE;
 
 #define SMTMAXSIZE 50
 #define FUNCMAXSIZE 40
 typedef struct SMT_{
 	char text[SMTMAXSIZE];
-	int status; // 1 for used; 0 for removed
+	//int status; // 1 for used; 0 for removed
 	SMTTYPE type;
 	char attr[4][FUNCMAXSIZE]; //save Function, Variable, RightValue, OP
 } SMT;

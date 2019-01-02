@@ -1,7 +1,7 @@
 #ifndef __LINEAR_SCAN_  //TYPEDEFINE
 #define __LINEAR_SCAN_
 
-#define __DEBUG
+//#define __DEBUG
 #ifdef __DEBUG
 #define dprintf(format,...) fprintf(stderr,format,##__VA_ARGS__)
 #else
