@@ -391,26 +391,26 @@ void do_optimize_block(int b_index,int e_index) // how to optimize through the w
 		if(smt[i].type == IF){
 			constant_propagation_block(block_index,i);
 			remove_unused_t(block_index,i);
-			reverse_propagation_block(block_index,i);
+			//reverse_propagation_block(block_index,i);
 			block_index = i+1;
 		}
 		if(smt[i].type == GOTO){
 			constant_propagation_block(block_index,i-1);
 			remove_unused_t(block_index,i-1);
-			reverse_propagation_block(block_index,i-1);
+			//reverse_propagation_block(block_index,i-1);
 			block_index = i+1;
 		}
 		if(smt[i].type == LABEL){
 			constant_propagation_block(block_index,i-1);
 			remove_unused_t(block_index,i-1);
-			reverse_propagation_block(block_index,i-1);
+			//reverse_propagation_block(block_index,i-1);
 			block_index = i+1;
 		}
 	}
 	if(block_index <= e_index){
 		constant_propagation_block(block_index,e_index);
 		remove_unused_t(block_index,e_index);
-		reverse_propagation_block(block_index,e_index);
+		//reverse_propagation_block(block_index,e_index);
 	}
 }
 
@@ -418,8 +418,9 @@ void do_optimize(int b_index,int e_index) // the very optimization
 {
 	constant_calculation(b_index,e_index);
 	do_optimize_block(b_index,e_index);
-	// OP or call + ASSIGN
+	// OP or call + ASSIGN ??? hava problem
 	// if reduce calculate
+	// data flow analysis
 }
 
 void begin_optimize()
@@ -439,6 +440,7 @@ void begin_optimize()
 				//out_optimize_smt();
 				//printf("\n");
 			}while(optimize_status);
+			
 		}
 	}
 }
